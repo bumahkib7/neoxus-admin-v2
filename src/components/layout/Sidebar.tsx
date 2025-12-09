@@ -270,7 +270,7 @@ export const Sidebar = () => {
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={async () => {
-                await authProvider.logout();
+                await authProvider.logout({});
                 navigate("/login");
               }}
             >

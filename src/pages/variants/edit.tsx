@@ -5,13 +5,6 @@ import { z } from "zod";
 import { useParams } from "react-router";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 
-type VariantForm = {
-  title: string;
-  sku?: string;
-  allowBackorder?: boolean;
-  manageInventory?: boolean;
-};
-
 const variantSchema = z.object({
   title: z.string().min(1, "Title is required"),
   sku: z.string().optional(),
@@ -26,10 +19,10 @@ export const VariantEdit = () => {
     register,
     formState: { errors },
     saveButtonProps,
-    refineCore: { queryResult },
+    refineCore,
     setValue,
-  } = useForm<VariantForm>({
-    resolver: zodResolver(variantSchema),
+  } = useForm({
+    resolver: zodResolver(variantSchema) as any,
     refineCoreProps: {
       action: "edit",
       resource: "admin/variants",
@@ -41,7 +34,9 @@ export const VariantEdit = () => {
       allowBackorder: false,
       manageInventory: true,
     },
-  }) as any;
+  } as any) as any;
+
+  const queryResult = refineCore?.queryResult;
 
   useEffect(() => {
     const variant = queryResult?.data?.data as any;

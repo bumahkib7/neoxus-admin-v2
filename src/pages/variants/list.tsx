@@ -1,6 +1,7 @@
 import { useList } from "@refinedev/core";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { useNavigate } from "react-router";
+import { useState } from "react";
 
 type Variant = {
   id: string;
@@ -18,25 +19,30 @@ type Variant = {
 
 export const VariantList = () => {
   const navigate = useNavigate();
-  const { data, isLoading, pagination } = useList<Variant>({
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  const { query, result } = useList<Variant>({
     resource: "admin/variants",
     pagination: {
-      current: 1,
-      pageSize: 10,
+      currentPage,
+      pageSize,
       mode: "server",
     },
   });
 
-  const { current = 1, pageSize = 10, setCurrent, setPageSize } = pagination ?? {};
+  const { isLoading } = query;
 
   // Backend responds with {content, page:{totalElements}}. Fall back to array or data.total
-  const raw = (data as any) ?? {};
-  const variants: Variant[] = Array.isArray(raw)
+  const raw = (result as any) ?? {};
+  const variants: Variant[] = Array.isArray(raw?.data)
+    ? raw.data
+    : Array.isArray(raw)
     ? raw
     : Array.isArray(raw?.content)
     ? raw.content
     : [];
-  const total = raw?.page?.totalElements ?? data?.total ?? variants.length;
+  const total = raw?.total ?? raw?.page?.totalElements ?? variants.length;
 
   const formatPrice = (prices?: Variant["prices"]) => {
     if (!prices || prices.length === 0) return "—";
@@ -116,21 +122,21 @@ export const VariantList = () => {
       {/* Pagination */}
       <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
         <div>
-          Showing {(current - 1) * pageSize + 1}-
-          {Math.min(current * pageSize, total)} of {total}
+          Showing {(currentPage - 1) * pageSize + 1}-
+          {Math.min(currentPage * pageSize, total)} of {total}
         </div>
         <div className="flex items-center gap-2">
           <button
             className="rounded border border-border px-3 py-1 disabled:opacity-50"
-            disabled={current <= 1}
-            onClick={() => setCurrent((current ?? 1) - 1)}
+            disabled={currentPage <= 1}
+            onClick={() => setCurrentPage((currentPage ?? 1) - 1)}
           >
             Prev
           </button>
           <button
             className="rounded border border-border px-3 py-1 disabled:opacity-50"
-            disabled={current * pageSize >= total}
-            onClick={() => setCurrent((current ?? 1) + 1)}
+            disabled={currentPage * pageSize >= total}
+            onClick={() => setCurrentPage((currentPage ?? 1) + 1)}
           >
             Next
           </button>

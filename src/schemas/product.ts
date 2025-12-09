@@ -8,12 +8,13 @@ export const ProductStatus = {
 export type ProductStatusType = (typeof ProductStatus)[keyof typeof ProductStatus];
 
 export const PRODUCT_STATUS_VALUES = Object.values(ProductStatus);
+const PRODUCT_STATUS_ENUM = z.union([z.literal("DRAFT"), z.literal("PUBLISHED")]);
 
 export const createProductSchema = z.object({
   title: z.string().min(1, "Title is required"),
   handle: z.string().min(1, "Handle is required"),
   description: z.string().optional(),
-  status: z.enum([ProductStatus.DRAFT, ProductStatus.PUBLISHED]),
+  status: PRODUCT_STATUS_ENUM,
   shippingProfileId: z.string().optional(),
   images: z.array(z.string()).optional(),
   thumbnail: z.string().optional(),
@@ -33,7 +34,7 @@ export const createProductSchema = z.object({
         inventoryQuantity: z.number().default(0),
         manageInventory: z.boolean().default(true),
         allowBackorder: z.boolean().default(false),
-        options: z.record(z.string()).default({}),
+        options: z.record(z.string(), z.string()).default({}),
         prices: z
           .array(
             z.object({
@@ -56,7 +57,7 @@ export const updateProductSchema = z.object({
   title: z.string().min(1, "Title is required"),
   handle: z.string().min(1, "Handle is required"),
   description: z.string().optional(),
-  status: z.enum([ProductStatus.DRAFT, ProductStatus.PUBLISHED]),
+  status: PRODUCT_STATUS_ENUM,
   shippingProfileId: z.string().optional(),
   images: z.array(z.string()).optional(),
   thumbnail: z.string().optional(),
@@ -77,7 +78,7 @@ export const updateProductSchema = z.object({
         inventoryQuantity: z.number().default(0),
         manageInventory: z.boolean().default(true),
         allowBackorder: z.boolean().default(false),
-        options: z.record(z.string()).default({}),
+        options: z.record(z.string(), z.string()).default({}),
         prices: z
           .array(
             z.object({

@@ -23,7 +23,6 @@ interface ProductVariant {
 }
 
 export const CreateProduct = () => {
-  const [hasVariants, setHasVariants] = useState(false);
   const [images, setImages] = useState<string[]>([]);
   const [options, setOptions] = useState<ProductOption[]>([]);
   const [variants, setVariants] = useState<ProductVariant[]>([]);
