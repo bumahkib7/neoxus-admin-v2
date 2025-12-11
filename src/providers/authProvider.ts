@@ -1,16 +1,26 @@
 import type { AuthProvider } from "@refinedev/core";
 import Cookies from "js-cookie";
+import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL;
+const axiosInstance = axios.create({
+  baseURL: API_URL,
+});
+
+axiosInstance.interceptors.request.use((config) => {
+  const token = Cookies.get("auth_token");
+  if (token && config.headers) {
+    config.headers["Authorization"] = `Bearer ${token}`;
+  }
+  return config;
+});
 
 export const authProvider: AuthProvider = {
   login: async ({ email, password }) => {
     try {
       const response = await fetch(`${API_URL}/api/v1/internal/auth/login`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
 
@@ -51,7 +61,6 @@ export const authProvider: AuthProvider = {
   },
   check: async () => {
     const token = Cookies.get("auth_token");
-
     if (!token) {
       return {
         authenticated: false,
@@ -59,38 +68,16 @@ export const authProvider: AuthProvider = {
       };
     }
 
+    // Let the axios interceptor handle refresh. If this fails, it will reject.
     try {
-      const response = await fetch(`${API_URL}/api/v1/internal/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (response.ok) {
-        return { authenticated: true };
-      }
-
-      // Try refresh on 401
-      if (response.status === 401 || response.status === 403) {
-        const refreshed = await tryRefresh();
-        if (refreshed) {
-          // verify with fresh token
-          const me = await fetch(`${API_URL}/api/v1/internal/auth/me`, {
-            headers: { Authorization: `Bearer ${Cookies.get("auth_token")}` },
-          });
-          if (me.ok) {
-            return { authenticated: true };
-          }
-        }
-        Cookies.remove("auth_token");
-        Cookies.remove("refresh_token");
-        return { authenticated: false, redirectTo: "/login" };
-      }
-    } catch {
-      // network error - treat as unauthenticated
+      await axiosInstance.get("/api/v1/internal/auth/me");
+      return { authenticated: true };
+    } catch (error) {
+      return {
+        authenticated: false,
+        redirectTo: "/login",
+      };
     }
-
-    Cookies.remove("auth_token");
-    Cookies.remove("refresh_token");
-    return { authenticated: false, redirectTo: "/login" };
   },
   getPermissions: async () => null,
   getIdentity: async () => {
@@ -98,69 +85,16 @@ export const authProvider: AuthProvider = {
     if (!token) return null;
 
     try {
-      const response = await fetch(`${API_URL}/api/v1/internal/auth/me`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        return await response.json();
-      }
-      if (response.status === 401 || response.status === 403) {
-        const refreshed = await tryRefresh();
-        if (refreshed) {
-          const me = await fetch(`${API_URL}/api/v1/internal/auth/me`, {
-            headers: { Authorization: `Bearer ${Cookies.get("auth_token")}` },
-          });
-          if (me.ok) return await me.json();
-        }
-        Cookies.remove("auth_token");
-        Cookies.remove("refresh_token");
-        return null;
-      }
-    } catch (_e) {
+      const { data } = await axiosInstance.get("/api/v1/internal/auth/me");
+      return data;
+    } catch (error) {
       return null;
     }
-    return null;
   },
   onError: async (error) => {
     console.error(error);
-    // Only logout on 401 (Unauthorized), not 403 (Forbidden)
-    // 403 typically means permission denied, not invalid auth
-    if (error.status === 401) {
-      Cookies.remove("auth_token");
-      return {
-        logout: true,
-        redirectTo: "/login",
-      };
-    }
+    // Let the axios interceptor handle 401s
     return {};
   },
 };
 
-async function tryRefresh(): Promise<boolean> {
-  const refresh = Cookies.get("refresh_token");
-  if (!refresh) return false;
-
-  try {
-    const resp = await fetch(`${API_URL}/api/v1/internal/auth/refresh`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refreshToken: refresh }),
-    });
-
-    if (!resp.ok) {
-      Cookies.remove("refresh_token");
-      Cookies.remove("auth_token");
-      return false;
-    }
-
-    const { accessToken, refreshToken } = await resp.json();
-    Cookies.set("auth_token", accessToken, { expires: 7 });
-    Cookies.set("refresh_token", refreshToken, { expires: 30 });
-    return true;
-  } catch (_e) {
-    return false;
-  }
-}
