@@ -36,3 +36,12 @@ export interface DummyJsonSeedResult {
   skippedProducts: number
   errors: string[]
 }
+
+export interface MockProductSeedResult {
+  total: number
+  createdProducts: number
+  updatedProducts: number
+  createdOffers: number
+  updatedOffers: number
+  errors: string[]
+}

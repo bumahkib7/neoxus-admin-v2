@@ -12,7 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import type { DummyJsonSeedResult, PaginatedAdvertiserResponse, SyncStatus } from "@/types/api"
+import type { MockProductSeedResult, PaginatedAdvertiserResponse, SyncStatus } from "@/types/api"
 
 interface MaintenanceResult {
   merchantId: string
@@ -232,19 +232,19 @@ export default function AggregatorPage() {
     }
   }
 
-  const handleSeedDummyData = async () => {
-    setSeedState({ loading: true, message: "Seeding fashion catalog data…" })
+  const handleSeedMockCatalog = async () => {
+    setSeedState({ loading: true, message: "Seeding mock catalog…" })
     try {
-      const result = await requestJson<DummyJsonSeedResult>("/admin/dev/seed/dummyjson", {
+      const result = await requestJson<MockProductSeedResult>("/admin/dev/seed/mock-products", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ limit: 50 }),
+        body: JSON.stringify({ limit: 30 }),
       })
       setSeedState({
         loading: false,
-        message: `Processed ${result.total} items (created: ${result.createdProducts}, updated: ${result.updatedProducts}, skipped: ${result.skippedProducts}).`,
+        message: `Processed ${result.total} items (created: ${result.createdProducts}, updated: ${result.updatedProducts}).`,
       })
       refreshAdvertisers()
     } catch (error) {
@@ -445,14 +445,14 @@ export default function AggregatorPage() {
       <Card>
         <CardHeader>
           <div>
-            <CardTitle>Seed fashion catalog</CardTitle>
-            <CardDescription>
-              Populate the catalog with fashion-only DummyJSON products so you have real-looking data for testing.
-            </CardDescription>
+              <CardTitle>Seed mock catalog</CardTitle>
+              <CardDescription>
+                Import the mockaroo-derived catalog so you can demo product+offer flows with real images and metadata.
+              </CardDescription>
           </div>
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="secondary" onClick={handleSeedDummyData} disabled={seedState.loading}>
-              {seedState.loading ? "Seeding…" : "Seed fashion data"}
+            <Button size="sm" variant="secondary" onClick={handleSeedMockCatalog} disabled={seedState.loading}>
+              {seedState.loading ? "Seeding…" : "Seed mock catalog"}
             </Button>
           </div>
         </CardHeader>
