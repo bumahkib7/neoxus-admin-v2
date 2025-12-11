@@ -1,8 +1,8 @@
-import { Input } from "@/components/ui/input"
+import { Link } from "react-router-dom"
 import { useDebounce } from "@/lib/hooks/use-debounce"
+import { requestJson } from "@/lib/api"
 import { useCallback, useEffect, useMemo, useState } from "react"
-import Cookies from "js-cookie"
-
+import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -12,7 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-
+import type { PaginatedAdvertiserResponse, SyncStatus } from "@/types/api"
 
 const formatDate = (value?: string | null) => {
   if (!value) return "Never synced"
@@ -165,9 +165,9 @@ export default function AggregatorPage() {
     }
   }
 
-  const advertiserCount = advertisers.length
+  const advertiserCount = advertisers?.totalElements ?? 0
   const advertiserList = useMemo(() => {
-    return advertisers.map((advertiser) => {
+    return (advertisers?.content ?? []).map((advertiser) => {
       const syncInfo = productSyncStates[advertiser.id]
       return (
         <div

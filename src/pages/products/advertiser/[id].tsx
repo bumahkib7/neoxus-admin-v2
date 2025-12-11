@@ -1,21 +1,8 @@
 import { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { requestJson } from "@/lib/api"
-
-interface AffiliateMerchant {
-  id: string
-  network: string
-  programId: number
-  name: string
-  websiteUrl?: string | null
-  logoUrl?: string | null
-  active: boolean
-  policiesJson?: string | null
-  featuresJson?: string | null
-  metadataJson?: string | null
-  lastSyncedAt?: string | null
-}
+import type { AffiliateMerchant } from "@/types/api"
 
 export default function AdvertiserDetailPage() {
   const [merchant, setMerchant] = useState<AffiliateMerchant | null>(null)
