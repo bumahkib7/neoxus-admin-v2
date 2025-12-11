@@ -36,6 +36,8 @@ const getHeaders = () => {
 
 async function requestJson<T>(path: string, options: RequestInit = {}) {
   const response = await fetch(`${API_BASE}${path}`, {
+    method: options.method ?? "GET",
+    credentials: "include",
     ...options,
     headers: {
       ...getHeaders(),
@@ -96,7 +98,7 @@ export default function AggregatorPage() {
         totalAdvertisers: number
         created: number
         updated: number
-      }>("/admin/aggregator/rakuten/advertisers/sync")
+      }>("/admin/aggregator/rakuten/advertisers/sync", { method: "POST" })
       setAdvertiserSyncState({
         loading: false,
         message: `Synced ${result.totalAdvertisers} advertisers (created ${result.created}, updated ${result.updated})`,
@@ -114,7 +116,8 @@ export default function AggregatorPage() {
     setOfferSyncState({ loading: true, message: "Enqueued offer metadata sync..." })
     try {
       const result = await requestJson<{ totalOffers: number; merchantsUpdated: number }>(
-        "/admin/aggregator/rakuten/offers/sync"
+        "/admin/aggregator/rakuten/offers/sync",
+        { method: "POST" }
       )
       setOfferSyncState({
         loading: false,
@@ -143,7 +146,9 @@ export default function AggregatorPage() {
         createdOffers: number
         updatedOffers: number
         deactivatedOffers: number
-      }>(`/admin/aggregator/rakuten/advertisers/${advertiserId}/sync-products`)
+      }>(`/admin/aggregator/rakuten/advertisers/${advertiserId}/sync-products`, {
+        method: "POST",
+      })
 
       setProductSyncStates((prev) => ({
         ...prev,
