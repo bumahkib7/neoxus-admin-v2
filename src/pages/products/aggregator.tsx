@@ -14,6 +14,12 @@ import {
 } from "@/components/ui/card"
 import type { PaginatedAdvertiserResponse, SyncStatus } from "@/types/api"
 
+interface MaintenanceResult {
+  merchantId: string
+  offersAffected: number
+  productsAffected: number
+}
+
 const formatDate = (value?: string | null) => {
   if (!value) return "Never synced"
   try {
@@ -34,6 +40,8 @@ export default function AggregatorPage() {
   const [advertiserSyncState, setAdvertiserSyncState] = useState<SyncStatus>({ loading: false })
   const [offerSyncState, setOfferSyncState] = useState<SyncStatus>({ loading: false })
   const [productSyncStates, setProductSyncStates] = useState<Record<string, SyncStatus>>({})
+  const [deactivateStates, setDeactivateStates] = useState<Record<string, SyncStatus>>({})
+  const [deleteStates, setDeleteStates] = useState<Record<string, SyncStatus>>({})
   const [cleanupState, setCleanupState] = useState<SyncStatus>({ loading: false })
   const [searchTerm, setSearchTerm] = useState("")
 
@@ -142,6 +150,64 @@ export default function AggregatorPage() {
     }
   }
 
+  const handleDeactivateProducts = async (advertiserId: string) => {
+    setDeactivateStates((prev) => ({
+      ...prev,
+      [advertiserId]: { loading: true, message: "Deactivating catalog..." },
+    }))
+
+    try {
+      const result = await requestJson<MaintenanceResult>(
+        `/admin/aggregator/rakuten/advertisers/${advertiserId}/products/deactivate`,
+        { method: "POST" }
+      )
+      setDeactivateStates((prev) => ({
+        ...prev,
+        [advertiserId]: {
+          loading: false,
+          message: `Deactivated ${result.offersAffected} offers and ${result.productsAffected} products.`,
+        },
+      }))
+    } catch (error) {
+      setDeactivateStates((prev) => ({
+        ...prev,
+        [advertiserId]: {
+          loading: false,
+          message: error instanceof Error ? error.message : "Deactivation failed",
+        },
+      }))
+    }
+  }
+
+  const handleDeleteProducts = async (advertiserId: string) => {
+    setDeleteStates((prev) => ({
+      ...prev,
+      [advertiserId]: { loading: true, message: "Removing catalog..." },
+    }))
+
+    try {
+      const result = await requestJson<MaintenanceResult>(
+        `/admin/aggregator/rakuten/advertisers/${advertiserId}/products`,
+        { method: "DELETE" }
+      )
+      setDeleteStates((prev) => ({
+        ...prev,
+        [advertiserId]: {
+          loading: false,
+          message: `Removed ${result.offersAffected} offers and ${result.productsAffected} products.`,
+        },
+      }))
+    } catch (error) {
+      setDeleteStates((prev) => ({
+        ...prev,
+        [advertiserId]: {
+          loading: false,
+          message: error instanceof Error ? error.message : "Removal failed",
+        },
+      }))
+    }
+  }
+
   const handleCleanupDummyJson = async () => {
     setCleanupState({ loading: true, message: "Deleting dummy JSON data…" })
     try {
@@ -191,15 +257,43 @@ export default function AggregatorPage() {
             <div className="flex-1 text-sm text-muted-foreground">
               {syncInfo?.message ?? "Run a product sync to import canonical catalog data."}
             </div>
-            <Button
-              size="sm"
-              variant="default"
-              onClick={() => handleProductSync(advertiser.id)}
-              disabled={syncInfo?.loading}
-            >
-              {syncInfo?.loading ? "Syncing…" : "Sync products"}
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                variant="default"
+                onClick={() => handleProductSync(advertiser.id)}
+                disabled={syncInfo?.loading}
+              >
+                {syncInfo?.loading ? "Syncing…" : "Sync products"}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleDeactivateProducts(advertiser.id)}
+                disabled={deactivateStates[advertiser.id]?.loading}
+              >
+                {deactivateStates[advertiser.id]?.loading ? "Deactivating…" : "Deactivate"}
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => handleDeleteProducts(advertiser.id)}
+                disabled={deleteStates[advertiser.id]?.loading}
+              >
+                {deleteStates[advertiser.id]?.loading ? "Removing…" : "Delete catalog"}
+              </Button>
+            </div>
           </div>
+          {deactivateStates[advertiser.id]?.message ? (
+            <p className="text-xs text-muted-foreground">
+              {deactivateStates[advertiser.id]?.message}
+            </p>
+          ) : null}
+          {deleteStates[advertiser.id]?.message ? (
+            <p className="text-xs text-muted-foreground">
+              {deleteStates[advertiser.id]?.message}
+            </p>
+          ) : null}
         </div>
       )
     })
