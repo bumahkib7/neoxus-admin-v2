@@ -44,11 +44,11 @@ export default function AggregatorPage() {
     setPageError(null)
     try {
       const pageSize = 20
-      let path = query
+      const baseUrl = query
         ? `/admin/aggregator/rakuten/advertisers/search?query=${encodeURIComponent(query)}`
         : "/admin/aggregator/rakuten/advertisers"
-      path += `&page=${page}&size=${pageSize}`
-      path = path.replace("?&", "?")
+      const separator = baseUrl.includes("?") ? "&" : "?"
+      const path = `${baseUrl}${separator}page=${page}&size=${pageSize}`
 
       const data = await requestJson<PaginatedAdvertiserResponse>(path)
       setAdvertisers(data)
