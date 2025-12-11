@@ -72,6 +72,7 @@ export default function AggregatorPage() {
   const [advertiserSyncState, setAdvertiserSyncState] = useState<SyncStatus>({ loading: false })
   const [offerSyncState, setOfferSyncState] = useState<SyncStatus>({ loading: false })
   const [productSyncStates, setProductSyncStates] = useState<Record<string, SyncStatus>>({})
+  const [cleanupState, setCleanupState] = useState<SyncStatus>({ loading: false })
 
   const refreshAdvertisers = useCallback(async () => {
     setLoading(true)
@@ -166,6 +167,29 @@ export default function AggregatorPage() {
           message: error instanceof Error ? error.message : "Product sync failed",
         },
       }))
+    }
+  }
+
+  const handleCleanupDummyJson = async () => {
+    setCleanupState({ loading: true, message: "Deleting dummy JSON data…" })
+    try {
+      const result = await requestJson<{
+        deletedMerchants: number
+        deletedOffers: number
+        deletedProducts: number
+        deletedBrands: number
+      }>("/admin/dev/seed/dummyjson", { method: "DELETE" })
+
+      setCleanupState({
+        loading: false,
+        message: `Deleted ${result.deletedMerchants} merchants, ${result.deletedProducts} products, ${result.deletedOffers} offers.`,
+      })
+      refreshAdvertisers()
+    } catch (error) {
+      setCleanupState({
+        loading: false,
+        message: error instanceof Error ? error.message : "Cleanup failed",
+      })
     }
   }
 
@@ -294,6 +318,27 @@ export default function AggregatorPage() {
             These syncs seed the Neoxus catalog with Rakuten inventory; use them when you need fresh data or after onboarding a new advertiser.
           </p>
         </CardFooter>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <div>
+            <CardTitle>Remove dummy data</CardTitle>
+            <CardDescription>
+              Deletes everything imported through the DummyJSON seed so you can start with live Rakuten data.
+            </CardDescription>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="destructive" onClick={handleCleanupDummyJson} disabled={cleanupState.loading}>
+              {cleanupState.loading ? "Cleaning…" : "Delete dummy data"}
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            {cleanupState.message ?? "Run this after you finish building out Rakuten workflows."}
+          </p>
+        </CardContent>
       </Card>
     </div>
   )
