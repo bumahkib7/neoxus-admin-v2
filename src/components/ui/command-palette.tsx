@@ -38,6 +38,7 @@ const commands: CommandItem[] = [
   { id: "aggregator", label: "Aggregator", href: "/products/aggregator", icon: Globe, shortcut: "G A", category: "Navigation" },
   { id: "orders", label: "Orders", href: "/orders", icon: ShoppingCart, shortcut: "G O", category: "Navigation" },
   { id: "customers", label: "Customers", href: "/customers", icon: Users, shortcut: "G C", category: "Navigation" },
+  { id: "users", label: "Users", href: "/users", icon: Users, shortcut: "G U", category: "Navigation" },
   { id: "settings", label: "Settings", href: "/settings", icon: Settings, shortcut: "G S", category: "Navigation" },
 ];
 

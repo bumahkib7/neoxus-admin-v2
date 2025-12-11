@@ -137,6 +137,16 @@ export const CommandPalette = ({ open, onOpenChange }: CommandPaletteProps) => {
               </span>
             </Command.Item>
             <Command.Item
+              onSelect={() => runCommand(() => navigate("/users"))}
+              className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-(--color-accent) aria-selected:text-(--color-accent-foreground) data-disabled:pointer-events-none data-disabled:opacity-50"
+            >
+              <Users className="mr-2 h-4 w-4" />
+              <span>Users</span>
+              <span className="ml-auto text-xs tracking-widest text-muted-foreground">
+                G U
+              </span>
+            </Command.Item>
+            <Command.Item
               onSelect={() => runCommand(() => navigate("/settings"))}
               className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-(--color-accent) aria-selected:text-(--color-accent-foreground) data-disabled:pointer-events-none data-disabled:opacity-50"
             >

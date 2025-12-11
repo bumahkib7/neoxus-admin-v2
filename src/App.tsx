@@ -16,6 +16,9 @@ import { VariantEdit } from "./pages/variants/edit";
 import { CollectionList } from "./pages/collections/list";
 import { CreateCollection } from "./pages/collections/create";
 import { EditCollection } from "./pages/collections/edit";
+import { UserList } from "./pages/users/list";
+import { CreateUser } from "./pages/users/create";
+import { EditUser } from "./pages/users/edit";
 import { Dashboard } from "./pages/dashboard";
 import { Settings } from "./pages/settings";
 import { Login } from "./pages/login";
@@ -148,6 +151,15 @@ function AppContent() {
                   label: "Customers",
                 },
               },
+              {
+                name: "admin/users",
+                list: "/users",
+                create: "/users/create",
+                edit: "/users/:id/edit",
+                meta: {
+                  label: "Users",
+                },
+              },
             ]}
           >
             <Routes>
@@ -197,6 +209,9 @@ function AppContent() {
                     </div>
                   }
                 />
+                <Route path="/users" element={<UserList />} />
+                <Route path="/users/create" element={<CreateUser />} />
+                <Route path="/users/:id/edit" element={<EditUser />} />
                 <Route path="/settings" element={<Settings />} />
               </Route>
               <Route

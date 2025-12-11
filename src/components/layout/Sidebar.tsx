@@ -64,6 +64,7 @@ const navigation: NavItem[] = [
   { name: "Aggregator", href: "/products/aggregator", icon: Globe, shortcut: "g a" },
   { name: "Orders", href: "/orders", icon: ShoppingCart, shortcut: "g o" },
   { name: "Customers", href: "/customers", icon: Users, shortcut: "g c" },
+  { name: "Users", href: "/users", icon: Users, shortcut: "g u" },
   { name: "Settings", href: "/settings", icon: Settings, shortcut: "g s" },
 ];
 
