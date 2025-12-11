@@ -229,7 +229,7 @@ export default function AggregatorPage() {
               <Button size="sm" variant="secondary" onClick={handleAdvertiserSync} disabled={advertiserSyncState.loading}>
                 {advertiserSyncState.loading ? "Running…" : "Sync advertisers"}
               </Button>
-              <Button size="sm" variant="outline" onClick={refreshAdvertisers} disabled={loading}>
+              <Button size="sm" variant="outline" onClick={() => refreshAdvertisers()} disabled={loading}>
                 Refresh list
               </Button>
             </div>
@@ -272,7 +272,7 @@ export default function AggregatorPage() {
               type="search"
               placeholder="Search advertisers..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
               className="max-w-xs"
             />
           </div>
