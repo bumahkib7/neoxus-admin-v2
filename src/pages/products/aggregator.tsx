@@ -34,7 +34,7 @@ const getHeaders = () => {
   }
 }
 
-const requestJson = async <T>(path: string, options: RequestInit = {}) => {
+async function requestJson<T>(path: string, options: RequestInit = {}) {
   const response = await fetch(`${API_BASE}${path}`, {
     ...options,
     headers: {
