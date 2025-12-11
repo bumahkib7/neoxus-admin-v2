@@ -14,7 +14,6 @@ import {
   Layers,
   Gift,
   Warehouse,
-  Globe,
   PanelLeftClose,
   PanelLeftOpen,
   Sun, // Added for theme toggle
@@ -59,7 +58,6 @@ const navigation: NavItem[] = [
       { name: "Variants", href: "/products/variants", icon: Box },
       { name: "Gift Cards", href: "/products/gift-cards", icon: Gift },
       { name: "Inventory", href: "/products/inventory", icon: Warehouse },
-      { name: "Aggregator", href: "/products/aggregator", icon: Globe },
     ],
   },
   { name: "Orders", href: "/orders", icon: ShoppingCart, shortcut: "g o" },

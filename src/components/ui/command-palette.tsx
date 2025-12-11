@@ -15,7 +15,6 @@ import {
   Layers,
   Gift,
   Warehouse,
-  Globe,
 } from "lucide-react";
 
 interface CommandItem {
@@ -35,7 +34,6 @@ const commands: CommandItem[] = [
   { id: "variants", label: "Variants", href: "/products/variants", icon: Box, category: "Products" },
   { id: "gift-cards", label: "Gift Cards", href: "/products/gift-cards", icon: Gift, category: "Products" },
   { id: "inventory", label: "Inventory", href: "/products/inventory", icon: Warehouse, category: "Products" },
-  { id: "aggregator", label: "Aggregator", href: "/products/aggregator", icon: Globe, category: "Products" },
   { id: "orders", label: "Orders", href: "/orders", icon: ShoppingCart, shortcut: "G O", category: "Navigation" },
   { id: "customers", label: "Customers", href: "/customers", icon: Users, shortcut: "G C", category: "Navigation" },
   { id: "settings", label: "Settings", href: "/settings", icon: Settings, shortcut: "G S", category: "Navigation" },
