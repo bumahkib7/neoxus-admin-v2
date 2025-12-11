@@ -12,7 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import type { PaginatedAdvertiserResponse, SyncStatus } from "@/types/api"
+import type { DummyJsonSeedResult, PaginatedAdvertiserResponse, SyncStatus } from "@/types/api"
 
 interface MaintenanceResult {
   merchantId: string
@@ -43,6 +43,7 @@ export default function AggregatorPage() {
   const [deactivateStates, setDeactivateStates] = useState<Record<string, SyncStatus>>({})
   const [deleteStates, setDeleteStates] = useState<Record<string, SyncStatus>>({})
   const [cleanupState, setCleanupState] = useState<SyncStatus>({ loading: false })
+  const [seedState, setSeedState] = useState<SyncStatus>({ loading: false })
   const [searchTerm, setSearchTerm] = useState("")
 
   const debouncedSearchTerm = useDebounce(searchTerm, 500)
@@ -227,6 +228,29 @@ export default function AggregatorPage() {
       setCleanupState({
         loading: false,
         message: error instanceof Error ? error.message : "Cleanup failed",
+      })
+    }
+  }
+
+  const handleSeedDummyData = async () => {
+    setSeedState({ loading: true, message: "Seeding fashion catalog data…" })
+    try {
+      const result = await requestJson<DummyJsonSeedResult>("/admin/dev/seed/dummyjson", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ limit: 50 }),
+      })
+      setSeedState({
+        loading: false,
+        message: `Processed ${result.total} items (created: ${result.createdProducts}, updated: ${result.updatedProducts}, skipped: ${result.skippedProducts}).`,
+      })
+      refreshAdvertisers()
+    } catch (error) {
+      setSeedState({
+        loading: false,
+        message: error instanceof Error ? error.message : "Seeding failed",
       })
     }
   }
@@ -416,6 +440,27 @@ export default function AggregatorPage() {
             </Button>
           </div>
         </CardFooter>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <div>
+            <CardTitle>Seed fashion catalog</CardTitle>
+            <CardDescription>
+              Populate the catalog with fashion-only DummyJSON products so you have real-looking data for testing.
+            </CardDescription>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="secondary" onClick={handleSeedDummyData} disabled={seedState.loading}>
+              {seedState.loading ? "Seeding…" : "Seed fashion data"}
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            {seedState.message ?? "Seeds only fashion and apparel items from DummyJSON."}
+          </p>
+        </CardContent>
       </Card>
 
       <Card>

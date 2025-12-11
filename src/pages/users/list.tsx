@@ -1,14 +1,11 @@
 import { useState } from "react";
-import { useNavigation } from "@refinedev/core";
 import { Button } from "@/components/ui/button";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
-import { AlertDialog, useConfirmDelete } from "@/components/ui/alert-dialog";
+import { AlertDialog } from "@/components/ui/alert-dialog";
 import {
   Pencil,
-  Trash,
   ChevronLeft,
   ChevronRight,
-  Filter,
   ArrowUpDown,
   Users as UsersIcon,
   KeyRound,
@@ -53,7 +50,6 @@ axiosInstance.interceptors.request.use((config) => {
 });
 
 export const UserList = () => {
-  const { list } = useNavigation();
   const queryClient = useQueryClient();
   const toast = useToast();
   const [searchQuery, setSearchQuery] = useState("");
@@ -64,9 +60,6 @@ export const UserList = () => {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
   const [newPassword, setNewPassword] = useState("");
-
-  // Delete confirmation dialog state
-  const { isOpen, pendingId, itemName, confirmDelete, handleCancel, setIsOpen } = useConfirmDelete();
 
   // Fetch users
   const { data, isLoading, isError } = useQuery<UsersListResponse>({

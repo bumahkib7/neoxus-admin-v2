@@ -26,3 +26,13 @@ export type SyncStatus = {
   loading: boolean
   message?: string
 }
+
+export interface DummyJsonSeedResult {
+  total: number
+  createdProducts: number
+  updatedProducts: number
+  createdOffers: number
+  updatedOffers: number
+  skippedProducts: number
+  errors: string[]
+}
