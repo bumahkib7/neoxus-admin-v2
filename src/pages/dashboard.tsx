@@ -1,6 +1,7 @@
 import { RevenueChart } from "@/components/charts/RevenueChart";
 import { Zap, Check, Link, Activity } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import Cookies from "js-cookie";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 
@@ -31,10 +32,12 @@ export const Dashboard = () => {
 
   useEffect(() => {
     const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+    const token = Cookies.get("auth_token");
     const wsUrl = `${API_URL}/ws`;
 
     // Create STOMP client
     const stompClient = new Client({
+      connectHeaders: token ? { Authorization: `Bearer ${token}` } : undefined,
       webSocketFactory: () => new SockJS(wsUrl) as WebSocket,
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
