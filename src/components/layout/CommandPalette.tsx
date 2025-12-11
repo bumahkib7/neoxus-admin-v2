@@ -12,6 +12,7 @@ import {
   Layers,
   Gift,
   Warehouse,
+  Globe,
   Tag,
 } from "lucide-react";
 
@@ -107,6 +108,13 @@ export const CommandPalette = ({ open, onOpenChange }: CommandPaletteProps) => {
             >
               <Warehouse className="mr-2 h-4 w-4" />
               <span>Inventory</span>
+            </Command.Item>
+             <Command.Item
+              onSelect={() => runCommand(() => navigate("/products/aggregator"))}
+              className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-(--color-accent) aria-selected:text-(--color-accent-foreground) data-disabled:pointer-events-none data-disabled:opacity-50"
+            >
+              <Globe className="mr-2 h-4 w-4" />
+              <span>Aggregator Products</span>
             </Command.Item>
             <Command.Item
               onSelect={() => runCommand(() => navigate("/orders"))}
