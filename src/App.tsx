@@ -10,6 +10,7 @@ import { ProductList } from "./pages/products/list";
 import { CreateProduct } from "./pages/products/create";
 import { EditProduct } from "./pages/products/edit";
 import AggregatorPage from "./pages/products/aggregator";
+import AdvertiserDetailPage from "./pages/products/advertiser/[id]";
 import { VariantList } from "./pages/variants/list";
 import { VariantEdit } from "./pages/variants/edit";
 import { CollectionList } from "./pages/collections/list";
@@ -167,6 +168,7 @@ function AppContent() {
                 <Route path="/products/create" element={<CreateProduct />} />
                 <Route path="/products/:id/edit" element={<EditProduct />} />
                 <Route path="/products/aggregator" element={<AggregatorPage />} />
+                <Route path="/products/advertiser/:id" element={<AdvertiserDetailPage />} />
                 <Route path="/products/variants" element={<VariantList />} />
                 <Route path="/products/variants/:id/edit" element={<VariantEdit />} />
                 <Route path="/products/categories" element={<CollectionList />} />

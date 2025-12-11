@@ -13,47 +13,6 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 
-const API_BASE = (import.meta.env.VITE_API_URL ?? "").replace(/\/$/, "")
-
-interface AdvertiserSummary {
-  id: string
-  name: string
-  websiteUrl?: string | null
-  programId: number
-  lastSyncedAt?: string | null
-}
-
-type SyncStatus = {
-  loading: boolean
-  message?: string
-}
-
-const getHeaders = () => {
-  const token = Cookies.get("auth_token")
-  return {
-    "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  }
-}
-
-async function requestJson<T>(path: string, options: RequestInit = {}) {
-  const response = await fetch(`${API_BASE}${path}`, {
-    method: options.method ?? "GET",
-    credentials: "include",
-    ...options,
-    headers: {
-      ...getHeaders(),
-      ...options.headers,
-    },
-  })
-
-  if (!response.ok) {
-    const body = await response.text()
-    throw new Error(body || response.statusText)
-  }
-
-  return (await response.json()) as T
-}
 
 const formatDate = (value?: string | null) => {
   if (!value) return "Never synced"
@@ -68,7 +27,8 @@ const formatDate = (value?: string | null) => {
 }
 
 export default function AggregatorPage() {
-  const [advertisers, setAdvertisers] = useState<AdvertiserSummary[]>([])
+  const [advertisers, setAdvertisers] = useState<PaginatedAdvertiserResponse | null>(null)
+  const [page, setPage] = useState(0)
   const [loading, setLoading] = useState(false)
   const [pageError, setPageError] = useState<string | null>(null)
   const [advertiserSyncState, setAdvertiserSyncState] = useState<SyncStatus>({ loading: false })
@@ -79,14 +39,18 @@ export default function AggregatorPage() {
 
   const debouncedSearchTerm = useDebounce(searchTerm, 500)
 
-  const refreshAdvertisers = useCallback(async (query?: string) => {
+  const refreshAdvertisers = useCallback(async (query?: string, page = 0) => {
     setLoading(true)
     setPageError(null)
     try {
-      const path = query
+      const pageSize = 20
+      let path = query
         ? `/admin/aggregator/rakuten/advertisers/search?query=${encodeURIComponent(query)}`
         : "/admin/aggregator/rakuten/advertisers"
-      const data = await requestJson<AdvertiserSummary[]>(path)
+      path += `&page=${page}&size=${pageSize}`
+      path = path.replace("?&", "?")
+
+      const data = await requestJson<PaginatedAdvertiserResponse>(path)
       setAdvertisers(data)
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to load advertisers"
@@ -97,8 +61,8 @@ export default function AggregatorPage() {
   }, [])
 
   useEffect(() => {
-    refreshAdvertisers(debouncedSearchTerm)
-  }, [refreshAdvertisers, debouncedSearchTerm])
+    refreshAdvertisers(debouncedSearchTerm, page)
+  }, [refreshAdvertisers, debouncedSearchTerm, page])
 
   const handleAdvertiserSync = async () => {
     setAdvertiserSyncState({ loading: true, message: "Enqueued advertiser sync..." })
@@ -202,6 +166,45 @@ export default function AggregatorPage() {
   }
 
   const advertiserCount = advertisers.length
+  const advertiserList = useMemo(() => {
+    return advertisers.map((advertiser) => {
+      const syncInfo = productSyncStates[advertiser.id]
+      return (
+        <div
+          key={advertiser.id}
+          className="flex flex-col gap-3 rounded-xl border border-input/40 bg-muted/40 px-4 py-3"
+        >
+          <div className="flex flex-wrap items-start justify-between gap-3">
+                                  <div className="flex flex-col gap-1">
+                                    <Link to={`/products/advertiser/${advertiser.id}`}>
+                                      <p className="text-sm font-semibold hover:underline">{advertiser.name}</p>
+                                    </Link>
+                                    <p className="text-xs text-muted-foreground">
+                                      Advertiser ID: {advertiser.programId} · Merchant ID: {advertiser.id}
+                                    </p>
+                                  </div>            <div className="flex flex-col items-end gap-1 text-right">
+              <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Last sync</p>
+              <p className="text-sm">{formatDate(advertiser.lastSyncedAt)}</p>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex-1 text-sm text-muted-foreground">
+              {syncInfo?.message ?? "Run a product sync to import canonical catalog data."}
+            </div>
+            <Button
+              size="sm"
+              variant="default"
+              onClick={() => handleProductSync(advertiser.id)}
+              disabled={syncInfo?.loading}
+            >
+              {syncInfo?.loading ? "Syncing…" : "Sync products"}
+            </Button>
+          </div>
+        </div>
+      )
+    })
+  }, [advertisers, productSyncStates, handleProductSync])
+
   const summaryMessage = useMemo(() => {
     if (pageError) return "Unable to load advertisers"
     if (loading) return "Loading advertisers..."
@@ -285,55 +288,39 @@ export default function AggregatorPage() {
             </div>
           ) : null}
 
-          {loading ? (
+          {loading && !advertiserList ? (
             <p className="text-sm text-muted-foreground">Loading advertisers…</p>
-          ) : advertisers.length === 0 ? (
+          ) : advertisers && advertisers.content.length === 0 ? (
             <p className="text-sm text-muted-foreground">No advertisers configured yet.</p>
           ) : (
             <div className="flex flex-col gap-3">
-              {advertisers.map((advertiser) => {
-                const syncInfo = productSyncStates[advertiser.id]
-                return (
-                  <div
-                    key={advertiser.id}
-                    className="flex flex-col gap-3 rounded-xl border border-input/40 bg-muted/40 px-4 py-3"
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div className="flex flex-col gap-1">
-                        <p className="text-sm font-semibold">{advertiser.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          Advertiser ID: {advertiser.programId} · Merchant ID: {advertiser.id}
-                        </p>
-                      </div>
-                      <div className="flex flex-col items-end gap-1 text-right">
-                        <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Last sync</p>
-                        <p className="text-sm">{formatDate(advertiser.lastSyncedAt)}</p>
-                      </div>
-                    </div>
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div className="flex-1 text-sm text-muted-foreground">
-                        {syncInfo?.message ?? "Run a product sync to import canonical catalog data."}
-                      </div>
-                      <Button
-                        size="sm"
-                        variant="default"
-                        onClick={() => handleProductSync(advertiser.id)}
-                        disabled={syncInfo?.loading}
-                      >
-                        {syncInfo?.loading ? "Syncing…" : "Sync products"}
-                      </Button>
-                    </div>
-                  </div>
-                )
-              })}
+              {advertiserList}
             </div>
           )}
         </CardContent>
 
-        <CardFooter>
+        <CardFooter className="flex justify-between items-center">
           <p className="text-xs text-muted-foreground">
-            These syncs seed the Neoxus catalog with Rakuten inventory; use them when you need fresh data or after onboarding a new advertiser.
+            Page {advertisers ? advertisers.number + 1 : "-"} of {advertisers ? advertisers.totalPages : "-"}
           </p>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setPage(page - 1)}
+              disabled={!advertisers || advertisers.number === 0}
+            >
+              Previous
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setPage(page + 1)}
+              disabled={!advertisers || advertisers.number >= advertisers.totalPages - 1}
+            >
+              Next
+            </Button>
+          </div>
         </CardFooter>
       </Card>
 
