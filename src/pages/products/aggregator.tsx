@@ -1,3 +1,5 @@
+import { Input } from "@/components/ui/input"
+import { useDebounce } from "@/lib/hooks/use-debounce"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import Cookies from "js-cookie"
 
@@ -73,12 +75,18 @@ export default function AggregatorPage() {
   const [offerSyncState, setOfferSyncState] = useState<SyncStatus>({ loading: false })
   const [productSyncStates, setProductSyncStates] = useState<Record<string, SyncStatus>>({})
   const [cleanupState, setCleanupState] = useState<SyncStatus>({ loading: false })
+  const [searchTerm, setSearchTerm] = useState("")
 
-  const refreshAdvertisers = useCallback(async () => {
+  const debouncedSearchTerm = useDebounce(searchTerm, 500)
+
+  const refreshAdvertisers = useCallback(async (query?: string) => {
     setLoading(true)
     setPageError(null)
     try {
-      const data = await requestJson<AdvertiserSummary[]>("/admin/aggregator/rakuten/advertisers")
+      const path = query
+        ? `/admin/aggregator/rakuten/advertisers/search?query=${encodeURIComponent(query)}`
+        : "/admin/aggregator/rakuten/advertisers"
+      const data = await requestJson<AdvertiserSummary[]>(path)
       setAdvertisers(data)
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to load advertisers"
@@ -89,8 +97,8 @@ export default function AggregatorPage() {
   }, [])
 
   useEffect(() => {
-    refreshAdvertisers()
-  }, [refreshAdvertisers])
+    refreshAdvertisers(debouncedSearchTerm)
+  }, [refreshAdvertisers, debouncedSearchTerm])
 
   const handleAdvertiserSync = async () => {
     setAdvertiserSyncState({ loading: true, message: "Enqueued advertiser sync..." })
@@ -255,9 +263,18 @@ export default function AggregatorPage() {
 
       <Card className="space-y-4">
         <CardHeader>
-          <div>
-            <CardTitle>Advertisers</CardTitle>
-            <CardDescription>Kick off deeper product syncs for each advertiser.</CardDescription>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle>Advertisers</CardTitle>
+              <CardDescription>Kick off deeper product syncs for each advertiser.</CardDescription>
+            </div>
+            <Input
+              type="search"
+              placeholder="Search advertisers..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="max-w-xs"
+            />
           </div>
         </CardHeader>
 
